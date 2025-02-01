@@ -1,0 +1,33 @@
+project: demo_project
+registry:
+  registry_type: sql
+  path: postgresql+psycopg://feast:feast@registry/feast_registry
+  cache_ttl_seconds: 60
+  sqlalchemy_config_kwargs:
+      echo: false
+      pool_pre_ping: true
+
+provider: local
+offline_store:
+  type: postgres
+  host: offline-store  # Use container name from docker-compose
+  port: 5432
+  database: feast_offline
+  db_schema: public
+  user: feast
+  password: feast
+
+# online_store:
+#   type: postgres
+#   host: localhost  # Use localhost since you're connecting from outside Docker
+#   port: 5433  # Port exposed for online-store
+#   database: feast_online
+#   db_schema: public
+#   user: feast
+#   password: feast
+
+online_store:
+  type: redis
+  connection_string: online-store
+
+entity_key_serialization_version: 2

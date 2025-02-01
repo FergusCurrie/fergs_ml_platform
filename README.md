@@ -22,6 +22,7 @@ Tools:
 Network create: `docker network create ml_platform`
 Start swarm: `docker compose up`
 Find ip for uis : `docker network inspect ml_platform`
+Rebuild a single container ; `docker-compose build --no-cache feast`
 
 https://min.io/docs/minio/kubernetes/upstream/index.html?ref=docs-redirect
 
@@ -54,3 +55,28 @@ CREATE TABLE IF NOT EXISTS air_quality (
     PRIMARY KEY (timestamp, station_name)
 );
 ```
+
+## Feast 
+
+Refs: 
+- https://redis.io/blog/feast-with-redis-tutorial-for-machine-learning/
+- https://docs.feast.dev/master/getting-started/components/overview
+- https://docs.feast.dev/how-to-guides/running-feast-in-production
+
+Concepts:
+- feature registry
+- feast sdk
+- feature server 
+- offline store 
+- online store 
+- feature repo: stores config for features 
+
+Getting setup: 
+1. Create repo of feature definitions (this is seperate... just store in project for now!)
+2. Creating a database-backed registry 
+
+Need to build:
+1. The ui 
+2. The registry postgres db 
+3. offline store 
+4. online store

@@ -1,4 +1,4 @@
-version: "3.9"
+# version: "3.9"
 services:
   postgres:
     image: postgres:14
@@ -84,7 +84,7 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY}
-      - MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
       - MLFLOW_S3_IGNORE_TLS=true
     command: >
       mlflow server
@@ -92,19 +92,103 @@ services:
       --host 0.0.0.0
       --port 5000
       --serve-artifacts
-      --artifacts-destination s3://mlflow
+      --artifacts-destination s3://bucket
     depends_on:
       - postgres
       - minio-create-bucket
     networks:
       - ml_platform
 
-  
+
+  #### feaast
+  online-store:
+    image: redis:latest
+    container_name: online-store-redis
+    ports:
+      - "6379:6379"  # Default Redis port
+    volumes:
+      - redis_data:/data
+    networks:
+      - ml_platform
+
+  registry:
+    image: postgres:latest
+    container_name: registry
+    environment:
+      POSTGRES_USER: feast
+      POSTGRES_PASSWORD: feast
+      POSTGRES_DB: feast_registry
+    ports:
+      - "5433:5432"
+    volumes:
+      - registry_data:/var/lib/postgresql/data
+    networks:
+      - ml_platform
+
+  offline-store:
+    image: postgres:latest
+    container_name: offline-store
+    environment:
+      POSTGRES_USER: feast
+      POSTGRES_PASSWORD: feast
+      POSTGRES_DB: feast_offline
+    ports:
+      - "5432:5432"
+    volumes:
+      - offline_store_data:/var/lib/postgresql/data
+    networks:
+      - ml_platform
+
+
+  # Not core. can do without
+  # feast:
+  #   build:
+  #     context: ./feast_ui/
+  #     dockerfile: Dockerfile
+  #   container_name: feast
+  #   ports:
+  #     - "8889:8888"
+  #   # volumes:
+  #   #   - ./feature_store_compose.yaml:/app/feature_store.yaml  # Mount feature_store.yaml
+  #   environment:
+  #     - FEAST_CONFIG_FILE=/app/feature_store.yaml
+  #   depends_on:
+  #     - registry 
+  #     - online-store
+  #     - offline-store
+  #   networks:
+  #     - ml_platform
+  #   healthcheck:
+  #     test: >
+  #       bash -c '
+  #       nc -zv registry 5432 &&
+  #       nc -zv online-store 6379 &&
+  #       nc -zv offline-store 5432
+  #       '
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+
 
 volumes:
   mlflow_postgres_volume:
+    name: mlflow_data_vooume  
+    external: false  
   raw_data_volume:
+    name: ml_raw_data_volume 
+    external: false  
   minio_data:
+    name: minio_data_volume 
+    external: false 
+  registry_data:
+    name: registry_data_volume 
+    external: false 
+  offline_store_data:
+    name: offline_store_data_volume 
+    external: false 
+  online_store_data:
+    name: online_store_data_volume 
+    external: false 
 
 
 networks:
